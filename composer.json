@@ -18,5 +18,5 @@
             "dreamzml\\LogAnalysis\\": ""
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "beta"
 }
