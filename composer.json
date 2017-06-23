@@ -1,0 +1,22 @@
+{
+    "name": "dreamzml/yii2-log-analysis",
+    "description": "yii2 git publish test system",
+    "type": "project",
+    "require": {
+        "yiisoft/yii2": "*",
+        "yiisoft/yii2-bootstrap": "*"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "dreamzml",
+            "email": "dream_zml@163.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "dreamzml\\LogAnalysis\\": ""
+        }
+    },
+    "minimum-stability": "dev"
+}
