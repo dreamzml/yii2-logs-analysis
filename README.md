@@ -18,13 +18,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require dreamzml/yii2-log-analysis
+php composer.phar require dreamzml/yii2-logs-analysis
 ```
 
 or add
 
 ```
-"dreamzml/yii2-log-analysis": "*"
+"dreamzml/yii2-logs-analysis": "*"
 ```
 
 to the require-dev section of your `composer.json` file.
