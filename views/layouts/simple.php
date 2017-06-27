@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $this \yii\web\View */
 /* @var $content string */
 
-$asset = \dreamzml\SimpleGitPublish\GitpublishAsset::register($this);
+$asset = dreamzml\LogAnalysis\AppAsset::register($this);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>

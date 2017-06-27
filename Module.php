@@ -2,6 +2,7 @@
 
 namespace dreamzml\LogAnalysis;
 
+use Yii;
 /**
  * LogAnalysis module definition class
  */

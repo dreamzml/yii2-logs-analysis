@@ -1,5 +1,5 @@
 {
-    "name": "dreamzml/yii2-log-analysis",
+    "name": "dreamzml/yii2-logs-analysis",
     "description": "log analysis",
     "type": "project",
     "require": {
