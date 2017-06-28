@@ -100,3 +100,12 @@ ul .badge{
 .navbar-inverse a.navbar-brand {
     color: #90cc20;
 }
+#preview-modal .modal-dialog {
+    min-width: 800px;
+}
+#preview-modal .modal-dialog .content {
+     background: #fafafa;
+     border-left: #eee 5px solid;
+     padding: 5px 10px;
+     overflow: auto;
+ }

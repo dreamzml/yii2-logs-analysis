@@ -4,6 +4,7 @@
     "type": "project",
     "require": {
         "yiisoft/yii2": "*",
+        "yiisoft/yii2-debug": "*",
         "yiisoft/yii2-bootstrap": "*"
     },
     "license": "MIT",

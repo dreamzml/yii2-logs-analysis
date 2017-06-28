@@ -37,10 +37,11 @@ Once the extension is installed, simply modify your application configuration as
 
 ```php
 return [
-    'bootstrap' => ['gii'],
     'modules' => [
         'analysis' => [
-            'class' => 'dreamzml\LogAnalysis\Module'
+            'class'      => 'dreamzml\LogAnalysis\Module',
+            'allowedIPs' => ['127.0.0.1', '::1'],          // if set * allow all ip
+            'monitors'   => ['admin'=>'123456'],           //allow users, if set * allow all user
         ],
     ],
     // ...

@@ -2,11 +2,17 @@
 use yii\bootstrap\NavBar;
 use yii\bootstrap\Nav;
 use yii\helpers\Html;
+use dreamzml\LogAnalysis\models\LogItem;
 
 /* @var $this \yii\web\View */
 /* @var $content string */
 
 $asset = dreamzml\LogAnalysis\AppAsset::register($this);
+
+$model      = new LogItem();
+if ($model->checkLogTarget()) {
+    $logsFile = $model->getLogFiles();
+}
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -28,6 +34,19 @@ $asset = dreamzml\LogAnalysis\AppAsset::register($this);
                       'brandUrl' => ['default/index'],
                       'options' => ['class' => 'navbar-inverse navbar-fixed-top'],
                   ]);
+
+    if($logsFile){
+       $nav = [];
+       foreach ($logsFile as $file){
+           $nav[] = ['label' => $file, 'url' => ['default/index', 'logsFile'=>$file]];
+       }
+        
+        echo Nav::widget([
+                 'options' => ['class' => 'nav navbar-nav'],
+                 'items' => $nav,
+             ]);
+    }
+    
     echo Nav::widget([
                          'options' => ['class' => 'nav navbar-nav navbar-right'],
                          'items' => [
