@@ -153,7 +153,7 @@ class LogItem extends Base
         $dirFiles = scandir($this->logPath);
         $logFiles = [];
         foreach ($dirFiles as $f) {
-            if ($f != '.' && $f != '..' && (strpos($f, '.swp') === false) && !is_dir($this->logPath.'/'.$f)) {
+            if (strpos($f, '.log') !== false && (strpos($f, '.swp') === false) && !is_dir($this->logPath.'/'.$f)) {
                 $logFiles[] = $f;
             }
         }
