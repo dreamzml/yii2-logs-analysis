@@ -213,35 +213,64 @@ class LogItem extends Base
         $block     = null;
         $line1     = null;
         $line2     = null;
+        $line3     = null;
         while (!feof($f)) {
-            $line = fgets($f);
-            if ((trim($line) == 'Stack trace:') && ($line2 == ']' || $line2 === null)) {
-                if (!empty($block)) {
-                    $errorBock[] = $block;
-                }
+            $line = trim(fgets($f));
+            
+            if (($line == 'Stack trace:' || ($this->isInStack($line) && !$this->isInStack($line1) )) && ($line2 === ']')) {
+                $errorBock[] = trim($block.PHP_EOL.$line3.PHP_EOL.$line2);
                 $block = $line1;
-            }elseif(($this->isNoVarName($line) && trim($line1) == ']')){
-                if (!empty($block)) {
-                    $errorBock[] = $block.$line1;
+                $line1 = null;
+                $line2 = null;
+                $line3 = null;
+            }elseif(($line == 'Stack trace:' || ($this->isInStack($line) && !$this->isInStack($line1) && !$this->isInStack($line2))) && $line3 === ']'){
+                $errorBock[] = trim($block.PHP_EOL.$line3);
+                $block = $line2.PHP_EOL.$line1;
+                $line1 = null;
+                $line2 = null;
+                $line3 = null;
+            }elseif(!$this->isErrorSummeryLine($line) && $this->isErrorSummeryLine($line1)){
+                if($this->isErrorSummeryLine($line2) && !$this->isErrorSummeryLine($line3)){
+                    $errorBock[] = trim($block.PHP_EOL.$line3);
+                    $block = $line2.PHP_EOL.$line1;
+                }elseif(!$this->isErrorSummeryLine($line2)){
+                    $errorBock[] = trim($block.PHP_EOL.$line3.PHP_EOL.$line2);
+                    $block = $line1;
+                }else{
+                    $errorBock[] = trim($block);
+                    $block = $line3.PHP_EOL.$line2.PHP_EOL.$line1;
                 }
+                $line1 = null;
+                $line2 = null;
+                $line3 = null;
+            }elseif(($this->isNoVarName($line) && $line1 === ']')){
+                $errorBock[] = trim($block.PHP_EOL.$line3.PHP_EOL.$line2.PHP_EOL.$line1);
                 $block = '';
+                $line1     = null;
+                $line2     = null;
+                $line3     = null;
             } else {
-                $block .= $line1;
+                $block .= PHP_EOL.$line3;
             }
-            $line2 = trim($line1);
+            $line3 = $line2;
+            $line2 = $line1;
             $line1 = $line;
         }
         fclose($f);
         
-        //$itemData = $this->decodeBlockData($errorBock[312]);
+        //$itemData = $this->decodeBlockData($errorBock[2]);
         //print_r($itemData);exit;
         
         $errorDataList = [];
         foreach ($errorBock as $k => $item) {
-            $itemData        = $this->decodeBlockData($item);
+            if(empty($item)){
+                continue;
+            }
+            
+            $itemData        = $this->decodeBlockData($item, $k);
             $errorDataList[] = $itemData;
-            if ($k > 100)
-                break;
+            //if ($k > 1)
+            //    break;
         }
         
         return $errorDataList;
@@ -254,14 +283,16 @@ class LogItem extends Base
      * @return array
      */
     public function decodeBlockData(string $str) : array {
+        //var_dump($str);exit;
         $itemVars = [];
         
         $itemVars['text'] = $str;
         $itemVars['key']  = md5($str);
         $str              = str_replace(['\'$_', ': $_'], ['\'$v1_', ': $v2_'], $str);
         $vars             = explode('$_', $str);
+
         $vars[0]          = str_replace(['\'$v1_', ': $v2_'], ['\'$_', ': $_'], $vars[0]);
-        
+
         //错误描述
         $errorSummer      = $vars[0];
         $errorSummer      = explode("\n", $errorSummer);
@@ -271,11 +302,13 @@ class LogItem extends Base
                 array_pop($errorSummer);
             }
             $varStr = join($errorSummer, "\n");
+            if(strpos($varStr, 'in /') !== false){
+                list($varStr) = explode('in /', $varStr);
+            }
+
             eval("\$data = [$varStr;");
             preg_match('/(.*?) (.*?) \[(.*)\](.*?)\[(error|warning|info)\]\[(.*?)\] (.*?)/isU', $errorSummerTitle, $result);
-            if(!isset($result[6])){
-                var_dump($errorSummerTitle);exit;
-            }
+
             $itemVars['errText']    = "[{$result[6]}]";
             $itemVars['exception']  = "[{$result[6]}]";
             $itemVars['time']       = strtotime("$result[1] $result[2]");
@@ -283,8 +316,6 @@ class LogItem extends Base
             $itemVars['stackTrace'] = '';
             $itemVars['data']       = $data;
         }else {
-            array_shift($errorSummer);
-            array_pop($errorSummer);
             preg_match('/(.*?) (.*?) \[(.*)\](.*?)\[(error|warning|info)\]\[(.*?)\] (.*?)/isU', $errorSummerTitle, $result);
     
             $errorinfo              = "[{$result[6]}] $result[7]";
@@ -295,20 +326,26 @@ class LogItem extends Base
             $itemVars['stackTrace'] = $errorSummer;
         }
         
-
+        
         //请求系统变更
         $varCount = count($vars);
         for ($i = 1 ; $i < $varCount ; $i++) {
             list($k, $v) = explode(' = ', $vars[$i]);
-            
-            $varStr = str_replace("\n", ",\n", trim($v));
-            $varStr = str_replace(["[,\n"], ["[\n"], $varStr);
-            $varStr = preg_replace(["/],\n&/"], "]\n", $varStr);
-            
+            $varStr = explode("\n", trim($v));
+            foreach ($varStr as &$line){
+                $line = trim($line);
+            }
+            $varStr = array_filter($varStr);
+            $varStr = join(",", $varStr);
+            $varStr = str_replace('[,', '[', $varStr);
+    
+            //if($i==1){
+            //    var_dump("\$$k = $varStr;");exit;
+            //}
             eval("\$$k = $varStr;");
             $itemVars[strtolower($k)] = ${$k};
         }
-        
+
         return $itemVars;
     }
     
@@ -359,6 +396,28 @@ class LogItem extends Base
     public function isNoVarName($line){
         $line = trim($line);
         $res = preg_match('/^(.*?) (.*?) \[(.*)\] \[$/', $line, $result);
+        return (bool)$res;
+    }
+    
+    /**
+     *  in /  格式的错误跟踪
+     * @param $line
+     *
+     * @return bool
+     */
+    public function isInStack($line){
+        $res = preg_match('/^in \/(.*?)$/', $line, $result);
+        return (bool)$res;
+    }
+    
+    /**
+     * 错误迅信的描述行
+     * @param $line
+     *
+     * @return bool
+     */
+    public function isErrorSummeryLine($line){
+        $res = preg_match('/(.*?) (.*?) \[(.*)\](.*?)\[(error|warning|info)\]\[(.*?)\] (.*?)/isU', $line, $result);
         return (bool)$res;
     }
     
