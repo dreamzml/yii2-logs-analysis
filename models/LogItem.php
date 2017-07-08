@@ -215,42 +215,42 @@ class LogItem extends Base
         $line2     = null;
         $line3     = null;
         while (!feof($f)) {
-            $line = trim(fgets($f));
+            $line = fgets($f);
             
-            if (($line == 'Stack trace:' || ($this->isInStack($line) && !$this->isInStack($line1) )) && ($line2 === ']')) {
-                $errorBock[] = trim($block.PHP_EOL.$line3.PHP_EOL.$line2);
+            if ((trim($line) == 'Stack trace:' || ($this->isInStack($line) && !$this->isInStack($line1) )) && (trim($line2) === ']')) {
+                $errorBock[] = trim($block.$line3.$line2);
                 $block = $line1;
                 $line1 = null;
                 $line2 = null;
                 $line3 = null;
-            }elseif(($line == 'Stack trace:' || ($this->isInStack($line) && !$this->isInStack($line1) && !$this->isInStack($line2))) && $line3 === ']'){
-                $errorBock[] = trim($block.PHP_EOL.$line3);
-                $block = $line2.PHP_EOL.$line1;
+            }elseif((trim($line) == 'Stack trace:' || ($this->isInStack($line) && !$this->isInStack($line1) && !$this->isInStack($line2))) && trim($line3) === ']'){
+                $errorBock[] = trim($block.$line3);
+                $block = $line2.$line1;
                 $line1 = null;
                 $line2 = null;
                 $line3 = null;
             }elseif(!$this->isErrorSummeryLine($line) && $this->isErrorSummeryLine($line1)){
                 if($this->isErrorSummeryLine($line2) && !$this->isErrorSummeryLine($line3)){
-                    $errorBock[] = trim($block.PHP_EOL.$line3);
-                    $block = $line2.PHP_EOL.$line1;
+                    $errorBock[] = trim($block.$line3);
+                    $block = $line2.$line1;
                 }elseif(!$this->isErrorSummeryLine($line2)){
-                    $errorBock[] = trim($block.PHP_EOL.$line3.PHP_EOL.$line2);
+                    $errorBock[] = trim($block.$line3.$line2);
                     $block = $line1;
                 }else{
                     $errorBock[] = trim($block);
-                    $block = $line3.PHP_EOL.$line2.PHP_EOL.$line1;
+                    $block = $line3.$line2.$line1;
                 }
                 $line1 = null;
                 $line2 = null;
                 $line3 = null;
             }elseif(($this->isNoVarName($line) && $line1 === ']')){
-                $errorBock[] = trim($block.PHP_EOL.$line3.PHP_EOL.$line2.PHP_EOL.$line1);
+                $errorBock[] = trim($block.$line3.$line2.$line1);
                 $block = '';
                 $line1     = null;
                 $line2     = null;
                 $line3     = null;
             } else {
-                $block .= PHP_EOL.$line3;
+                $block .= $line3;
             }
             $line3 = $line2;
             $line2 = $line1;
@@ -342,8 +342,9 @@ class LogItem extends Base
             //if($i==1){
             //    var_dump("\$$k = $varStr;");exit;
             //}
-            eval("\$$k = $varStr;");
-            $itemVars[strtolower($k)] = ${$k};
+            // eval("\$$k = $varStr;");
+            // $itemVars[strtolower($k)] = ${$k};
+            $itemVars[strtolower($k)] = $varStr;
         }
 
         return $itemVars;
@@ -406,6 +407,7 @@ class LogItem extends Base
      * @return bool
      */
     public function isInStack($line){
+        $line = trim($line);
         $res = preg_match('/^in \/(.*?)$/', $line, $result);
         return (bool)$res;
     }
@@ -417,6 +419,7 @@ class LogItem extends Base
      * @return bool
      */
     public function isErrorSummeryLine($line){
+        $line = trim($line);
         $res = preg_match('/(.*?) (.*?) \[(.*)\](.*?)\[(error|warning|info)\]\[(.*?)\] (.*?)/isU', $line, $result);
         return (bool)$res;
     }
